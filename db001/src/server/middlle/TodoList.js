@@ -2,7 +2,7 @@ const express = require('express');
 const Router = require('express-promise-router');
 const router = new Router();
 
-const db = require('./../db/query');
+const db = require('../db/query');
 
 // Userのtodoを取得
 router.get("/todo/:userId", async (req, res) => {
