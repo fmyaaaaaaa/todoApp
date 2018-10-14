@@ -6,6 +6,8 @@ const {TextArea} = Input;
 
 const {Provider, Consumer} = React.createContext();
 
+import {Api} from './../../component/api/Api';
+
 class TodoHeader extends React.Component {
     render(){
         return (
@@ -35,12 +37,13 @@ class UserNameBar extends React.Component {
         });
     }
 
-    getUserId(){
-        const url = "http://192.168.33.15:4000";
-        fetch(url + "/userList/userId/" + this.state.userName)
-            .then(res => res.json()).then(data => {
-                this.props.handleToDoList(data);
-        }).catch(error => console.log("ERROR!!" + error));
+    async getUserId(){
+        const param = {
+            method: "GET",
+            param: this.state.userName
+        };
+        const result = await new Api("getUserId", param).done();
+        this.props.handleToDoList(result);
     }
 
     render(){
@@ -78,15 +81,14 @@ class RenderTodo extends React.Component {
         this.setState({selectedRowKeys: selectedRowKeys});
     }
 
-    onClick(){
-        const url = "http://192.168.33.15:4000";
+    async onClick(){
         const doneTodo = this.state.selectedRowKeys;
-        doneTodo.forEach((todo) => {
-            const todoId = this.props.todoList[todo]["id"];
-            fetch(url + "/todoList/updateTodo/" + todoId)
-                .then(res => res.json()).then(data => {
-                    console.log("Update Success");
-            }).catch(error => console.log("ERROR!!" + error));
+        await doneTodo.forEach((todo) => {
+            const param = {
+                method: "PUT",
+                param: this.props.todoList[todo]["id"]
+            };
+            const result = new Api("updateTodo", param).done();
         });
     }
 
@@ -157,27 +159,17 @@ class Add extends React.Component {
         })
     }
 
-    handleSubmit(event){
+    async handleSubmit(event){
         event.preventDefault();
-        const url = "http://192.168.33.15:4000";
-        const obj = {
-            userId: event.target.name,
-            todo: this.state.todo,
-            memo: this.state.memo
+        const param = {
+            method: "POST",
+            param: {
+                userId: event.target.name,
+                todo: this.state.todo,
+                memo: this.state.memo
+            }
         };
-        const method = "POST";
-        const body = JSON.stringify(obj);
-        const headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        };
-
-        fetch(url + "/todoList/addTodo", {method, headers, body})
-            .then((res) => res.json()).then(data => {
-                if(data["error"]){
-
-                }
-        }).catch(error => console.log("ERROR!!" + error));
+        const result = await new Api("addTodo", param).done();
     }
 
     render(){
@@ -249,18 +241,20 @@ class Todo extends React.Component {
         this.setState(this.initialState);
     }
 
-    handleToDoList(data){
+    async handleToDoList(data){
         const url = "http://192.168.33.15:4000";
         if(Object.keys(data).length) {
             const userId = data[0]["user_id"];
-            fetch(url + "/todoList/todo/" + userId)
-                .then(res => res.json()).then(data => {
+            const param = {
+                method: "GET",
+                param: userId
+            };
+            const result = await new Api("getTodo", param).done();
                 this.setState({
                     userId: userId,
-                    todoList: data,
+                    todoList: result,
                     isShow: true
                 });
-            }).catch(error => console.log("ERROR!!" + error));
         } else {
             this.reset();
         }
