@@ -4,6 +4,7 @@ const src = path.resolve(__dirname, 'src');
 const dist = path.resolve(__dirname, 'dist');
 
 module.exports = {
+    devtool: 'inline-source-map',
     entry: {
         todoApp: src + "/index_todoApp.js"
     },
