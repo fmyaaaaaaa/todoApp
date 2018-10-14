@@ -6,7 +6,7 @@
  param　:　UserName(String)  
 
 #### TodoList 　
- - addTodo: "/todoList/addTodo"
+ - addTodo: "/todoList/addTodo"  
  method　:　POST  
  param　:　userId（Integer)  
 　　　　　 todo（String)  
