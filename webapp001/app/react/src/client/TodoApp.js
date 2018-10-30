@@ -1,16 +1,13 @@
 import 'babel-polyfill';
 import React from "react";
 import ReactDOM from 'react-dom';
-import Loadable from 'react-loadable';
 import { HashRouter as Router, Link , Route, Switch } from 'react-router-dom';
 import {Layout} from 'antd';
 import HomePage from './pages/home/Home'
 import MainPage from './pages/main/Main'
-import TodoPage from './pages/todo/Todo'
+import TodoPage from './pages/todo/TodoPage'
 import SkillPage from './pages/skill/Skill'
 import './../../style/style.scss'
-
-const Loading = () => <div>Loading...</div>;
 
 const TodoApp = () => (
     <Router>
@@ -38,7 +35,7 @@ const TodoApp = () => (
                 </Layout>
             </Layout>
         </div>
-</Router>
+    </Router>
 );
 
 ReactDOM.render(

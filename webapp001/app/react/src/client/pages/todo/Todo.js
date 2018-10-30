@@ -4,10 +4,6 @@ import ValidateInput from './../../component/input/ValidateInput'
 import {Input, Button, Form, Card, Row, Col, Table, Divider} from 'antd';
 const {TextArea} = Input;
 
-const {Provider, Consumer} = React.createContext();
-
-import {Api} from './../../component/api/Api';
-
 class TodoHeader extends React.Component {
     render(){
         return (
@@ -24,26 +20,18 @@ class TodoHeader extends React.Component {
 class UserNameBar extends React.Component {
     constructor(props){
         super(props);
-        this.state = {
-            userName: ""
-        };
-        this.handleValue = this.handleValue.bind(this);
+        this.onChange = this.onChange.bind(this);
         this.getUserId = this.getUserId.bind(this);
     }
-
-    handleValue(value){
-        this.setState({
-            userName: value
-        });
+    
+    onChange(event) {
+        this.props.handleValue(event.target.value);
     }
 
-    async getUserId(){
-        const param = {
-            method: "GET",
-            param: this.state.userName
-        };
-        const result = await new Api("getUserId", param).done();
-        this.props.handleToDoList(result);
+    getUserId(){
+        if(this.props.userName !== "") {
+            this.props.getUserId(this.props.userName);
+        }
     }
 
     render(){
@@ -51,7 +39,7 @@ class UserNameBar extends React.Component {
             <React.Fragment>
                 <Form layout="inline">
                     <Form.Item>
-                        <ValidateInput validateType="TEXT" handleValue={this.handleValue} placeholder="What you name..."/>
+                        <Input type="text" onChange={this.onChange} placeholder="What you name..."/>
                     </Form.Item>
                     <Form.Item>
                         <Button onClick={this.getUserId}>Show</Button>
@@ -75,7 +63,7 @@ class RenderTodo extends React.Component {
         this.onSelectChange = this.onSelectChange.bind(this);
         this.onClick = this.onClick.bind(this);
     }
-
+    
     onSelectChange(selectedRowKeys){
         console.log(selectedRowKeys);
         this.setState({selectedRowKeys: selectedRowKeys});
@@ -93,6 +81,7 @@ class RenderTodo extends React.Component {
     }
 
     render() {
+        console.log(this.props);
         if (this.props.todoList === "") {
             return null;
         }
@@ -142,51 +131,40 @@ class RenderTodo extends React.Component {
 class Add extends React.Component {
     constructor(props){
         super(props);
-        this.state = {
-            todo: "",
-            memo: ""
-        };
-        this.handleChange = this.handleChange.bind(this);
+        this.onChangeTodo = this.onChangeTodo.bind(this);
+        this.onChangeMemo = this.onChangeMemo.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+    onChangeTodo(event){
+        this.props.handleChangeTodo(event.target.value);
+    }
 
-    handleChange(event){
-        const target = event.target;
-        const name = target.name;
-        const value = target.value;
-        this.setState({
-            [name]: value
-        })
+    onChangeMemo(event){
+        this.props.handleChangeMemo(event.target.value);
     }
 
     async handleSubmit(event){
         event.preventDefault();
+        console.log(this.props);
         const param = {
-            method: "POST",
-            param: {
-                userId: event.target.name,
-                todo: this.state.todo,
-                memo: this.state.memo
-            }
+            userId: this.props.userId,
+            todo: this.props.todo,
+            memo: this.props.memo
         };
-        const result = await new Api("addTodo", param).done();
+        this.props.insertTodoObj(param);
     }
 
     render(){
         return(
-            <Consumer>
-                {({state}) => (
-                <form onSubmit={this.handleSubmit} name={state.userId}>
-                    <p><label for="todo">todo</label>
-                        <Input type="text" name="todo" value={this.state.todo} onChange={this.handleChange}/>
-                    </p>
-                    <p><label for="memo">memo</label>
-                        <TextArea type="text" name="memo" value={this.state.memo} onChange={this.handleChange} autosize/>
-                    </p>
-                    <Button type="submit" htmlType="submit">Add</Button>
-                </form>
-                )}
-            </Consumer>
+            <form onSubmit={this.handleSubmit}>
+                <p><label for="todo">todo</label>
+                    <Input type="text" onChange={this.onChangeTodo}/>
+                </p>
+                <p><label for="memo">memo</label>
+                    <TextArea type="text" onChange={this.onChangeMemo} autosize/>
+                </p>
+                <Button type="submit" htmlType="submit">Add</Button>
+            </form>
         )
     }
 }
@@ -197,26 +175,21 @@ class Add extends React.Component {
 class AddTodo extends React.Component {
     constructor(props){
         super(props);
-        this.state = {
-            isRegister: false
-        };
         this.handleClick = this.handleClick.bind(this);
     }
 
     handleClick(){
-        this.setState({
-            isRegister: true
-        })
+        this.props.changeIsRegister(true);
     }
 
     render(){
-        const isRegister = this.state.isRegister;
+        const isRegister = this.props.isRegister;
         return (
             <React.Fragment>
                 <br/>
                 <p><label>Add Todo？ </label>
                 <Button onClick={this.handleClick}>Yes</Button></p>
-                {isRegister ? (<Add />) : (null)}
+                {isRegister ? (<Add {...this.props}/>) : (null)}
             </React.Fragment>
         )
     }
@@ -226,61 +199,25 @@ class AddTodo extends React.Component {
  * Todoページの骨格。
  */
 class Todo extends React.Component {
-    constructor(props){
-        super(props);
-        this.state = {
-            userId: "",
-            todoList: "",
-            isShow: false
-        };
-        this.initialState = this.state;
-        this.handleToDoList = this.handleToDoList.bind(this);
-    }
-
-    reset() {
-        this.setState(this.initialState);
-    }
-
-    async handleToDoList(data){
-        const url = "http://192.168.33.15:4000";
-        if(Object.keys(data).length) {
-            const userId = data[0]["user_id"];
-            const param = {
-                method: "GET",
-                param: userId
-            };
-            const result = await new Api("getTodo", param).done();
-                this.setState({
-                    userId: userId,
-                    todoList: result,
-                    isShow: true
-                });
-        } else {
-            this.reset();
-        }
-    }
-
     render(){
-        const isShow = this.state.isShow;
+        const isShow = this.props.isShowTodo;
         return(
             <div>
                 <Row>
-                    <Provider value={{state: this.state}}>
-                        <Col span={1}/>
-                        <Col span={10}>
-                            <br/>
-                            <Card title="Todo Management!!">
-                                <TodoHeader />
-                                <UserNameBar handleToDoList={this.handleToDoList}/>
-                                {isShow ? (<AddTodo/>): null}
-                            </Card>
-                        </Col>
-                        <Col span={1}/>
-                        <Col span={10}>
-                            <br/>
-                            {isShow ? <Card title="Your TodoList..."><RenderTodo todoList={this.state.todoList} /></Card> : null}
-                        </Col>
-                    </Provider>
+                    <Col span={1}/>
+                    <Col span={10}>
+                        <br/>
+                        <Card title="Todo Management!!">
+                            <TodoHeader />
+                            <UserNameBar {...this.props} />
+                            {isShow ? (<AddTodo {...this.props}/>): null}
+                        </Card>
+                    </Col>
+                    <Col span={1}/>
+                    <Col span={10}>
+                        <br/>
+                        {isShow ? <Card title="Your TodoList..."><RenderTodo {...this.props} /></Card> : null}
+                    </Col>
                 </Row>
             </div>
         )
